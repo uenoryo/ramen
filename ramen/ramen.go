@@ -4,23 +4,39 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 )
 
 const schemaPath = "./ramen.sql"
 
-func Init() error {
+type ramen struct {
+	storage Storage
+}
+
+type Storage interface {
+	init() error
+	save(datetime, memo string) error
+}
+
+type database struct {
+	dsn *sql.DB
+}
+
+func NewDatabase(dsn *sql.DB) *database {
+	return &database{
+		dsn: dsn,
+	}
+}
+
+func (db *database) init() error {
 	file, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return errors.Wrap(err, "error read sql file")
 	}
 	sql := strings.TrimSuffix(string(file), "\n")
 
-	db, err := db()
 	if err != nil {
 		return errors.Wrap(err, "error connect db")
 	}
@@ -30,20 +46,33 @@ func Init() error {
 		if q == "" {
 			continue
 		}
-		if _, err = db.Exec(q); err != nil {
+		if _, err = db.dsn.Exec(q); err != nil {
 			return errors.Wrapf(err, "error exec query, [%s]", q)
 		}
 	}
 	return nil
 }
 
-func db() (*sql.DB, error) {
-	dbhost := os.Getenv("RAMEN_DB_HOST")
-	dbname := os.Getenv("RAMEN_DB_NAME")
-	user := os.Getenv("RAMEN_DB_USER")
-	password := os.Getenv("RAMEN_DB_PASSWORD")
-	if dbname == "" || user == "" {
-		return nil, errors.New("error connect database, database name and user name are required")
+func (db *database) save(memo, datetime string) error {
+	q := fmt.Sprintf("INSERT INTO reminder(`memo`, `remember_at`) VALUES('%s', '%s')", memo, datetime)
+	_, err := db.dsn.Exec(q)
+	return err
+}
+
+func NewRamen(storage Storage) *ramen {
+	return &ramen{
+		storage: storage,
 	}
-	return sql.Open("mysql", fmt.Sprintf("%s:%s@%s/%s", user, password, dbhost, dbname))
+}
+
+func (ramen *ramen) Init() error {
+	return ramen.storage.init()
+}
+
+func (ramen *ramen) Set(memo, datetime string) error {
+	err := ramen.storage.save(memo, datetime)
+	if err != nil {
+		return errors.Wrap(err, "error save reminder")
+	}
+	return nil
 }
