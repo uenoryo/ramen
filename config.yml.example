@@ -1,3 +1,4 @@
 slack:
-  bot_name: "ラーメン"
+  bot_name: "ramen"
+  bot_display_name: "ラーメン"
   token: "rewrite me"
