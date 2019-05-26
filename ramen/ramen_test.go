@@ -1,6 +1,10 @@
 package ramen
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/uenoryo/ramen/slack"
+)
 
 func Test_isDate(t *testing.T) {
 	t.Parallel()
@@ -108,6 +112,37 @@ func Test_isTime(t *testing.T) {
 		ramen := &Ramen{}
 		if g, w := ramen.isTime(test.Input), test.Expect; g != w {
 			t.Errorf("error isTime. input %s, got %v, want %v", test.Input, g, w)
+		}
+	}
+}
+
+func Test_isBotName(t *testing.T) {
+	t.Parallel()
+
+	type Test struct {
+		Input  string
+		Expect bool
+	}
+
+	cases := []Test{
+		{
+			Input:  "@testbot",
+			Expect: true,
+		},
+		{
+			Input:  "testbot",
+			Expect: false,
+		},
+	}
+
+	for _, test := range cases {
+		ramen := &Ramen{
+			client: &slack.Client{
+				BotName: "testbot",
+			},
+		}
+		if g, w := ramen.isBotName(test.Input), test.Expect; g != w {
+			t.Errorf("error isBotName. input %s, got %v, want %v", test.Input, g, w)
 		}
 	}
 }
