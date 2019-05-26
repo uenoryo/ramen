@@ -7,12 +7,14 @@ import (
 )
 
 type Config struct {
-	Token   string `yaml:"token"`
-	BotName string `yaml:"bot_name"`
+	Token          string `yaml:"token"`
+	BotName        string `yaml:"bot_name"`
+	BotDisplayName string `yaml:"bot_display_name"`
 }
 
 type Client struct {
 	BotName          string
+	BotDisplayName   string
 	client           *libslack.Client
 	rtm              *libslack.RTM
 	OnConnected      func()
@@ -27,6 +29,7 @@ func New(cnf Config) *Client {
 	client := libslack.New(cnf.Token)
 	return &Client{
 		BotName:          cnf.BotName,
+		BotDisplayName:   cnf.BotDisplayName,
 		client:           client,
 		rtm:              client.NewRTM(),
 		OnConnected:      onConnectedDefault,
@@ -47,7 +50,7 @@ func (cli *Client) Run() {
 				cli.OnConnected()
 
 			case *libslack.MessageEvent:
-				if ev.Username == cli.BotName {
+				if ev.Username == cli.BotDisplayName {
 					continue
 				}
 
@@ -61,7 +64,7 @@ func (cli *Client) Post(channel, text string) {
 	cli.client.PostMessage(
 		channel,
 		libslack.MsgOptionText(text, false),
-		libslack.MsgOptionUsername(cli.BotName),
+		libslack.MsgOptionUsername(cli.BotDisplayName),
 	)
 }
 
