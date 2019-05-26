@@ -57,6 +57,14 @@ func (cli *Client) Run() {
 	}
 }
 
+func (cli *Client) Post(channel, text string) {
+	cli.client.PostMessage(
+		channel,
+		libslack.MsgOptionText(text, false),
+		libslack.MsgOptionUsername(cli.BotName),
+	)
+}
+
 func onConnectedDefault() {
 	fmt.Println("connected")
 }
