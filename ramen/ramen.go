@@ -3,6 +3,7 @@ package ramen
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/uenoryo/ramen/slack"
@@ -23,8 +24,9 @@ type Ramen struct {
 
 func New(cnf Config) *Ramen {
 	slackCnf := slack.Config{
-		BotName: cnf.BotName,
-		Token:   cnf.Token,
+		BotName:        cnf.BotName,
+		BotDisplayName: cnf.BotDisplayName,
+		Token:          cnf.Token,
 	}
 	client := slack.New(slackCnf)
 	ramen := &Ramen{
@@ -43,7 +45,23 @@ func (rmn Ramen) Run() error {
 }
 
 func (rmn Ramen) receiveAndReply(msg *slack.Message) {
+	log.Println(msg)
+	_, date, time, content, err := rmn.analysis(msg.Text)
+	switch err {
+	case nil:
+		break
+	case ErrMissingBotBame:
+		// 反応しない
+		return
+	case ErrMissingRemindTime:
+		// TODO: エラーを返す
+		return
+	default:
+		// TODO: エラーを返す
+		return
+	}
 
+	rmn.client.Post(msg.Channel, fmt.Sprintf("%s %s に「%s」をリマインドしますね！", date, time, content))
 }
 
 func (rmn Ramen) analysis(text string) (to, date, time, content string, err error) {
