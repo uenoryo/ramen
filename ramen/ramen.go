@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	slack.Config
+	slack.Config `yaml:"slack"`
 }
 
 type Ramen struct {

@@ -1,40 +1,24 @@
 package main
 
 import (
-	"database/sql"
-	"errors"
-	"fmt"
-	"log"
-	"os"
+	"io/ioutil"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/uenoryo/ramen/ramen"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func main() {
-	mysql, err := db()
+	buf, err := ioutil.ReadFile("./config.yml")
 	if err != nil {
-		log.Printf("error initialize database, %s", err.Error())
-		return
-	}
-	db := ramen.NewDatabase(mysql)
-	ramen := ramen.NewRamen(db)
-	if err := ramen.Init(); err != nil {
-		log.Printf("error ramen init, %s", err.Error())
+		panic(err)
 	}
 
-	if err := ramen.Set("test", "2012/10/10"); err != nil {
-		log.Printf("error ramen set, %s", err.Error())
+	cnf := ramen.Config{}
+	err = yaml.Unmarshal(buf, &cnf)
+	if err != nil {
+		panic(err)
 	}
-}
 
-func db() (*sql.DB, error) {
-	dbhost := os.Getenv("RAMEN_DB_HOST")
-	dbname := os.Getenv("RAMEN_DB_NAME")
-	user := os.Getenv("RAMEN_DB_USER")
-	password := os.Getenv("RAMEN_DB_PASSWORD")
-	if dbname == "" || user == "" {
-		return nil, errors.New("error connect database, database name and user name are required")
-	}
-	return sql.Open("mysql", fmt.Sprintf("%s:%s@%s/%s", user, password, dbhost, dbname))
+	ramen := ramen.New(cnf)
+	ramen.Run()
 }

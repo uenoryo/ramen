@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	Token   string
-	BotName string
+	Token   string `yaml:"token"`
+	BotName string `yaml:"bot_name"`
 }
 
 type Client struct {
