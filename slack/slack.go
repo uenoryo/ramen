@@ -1,21 +1,36 @@
 package slack
 
 import (
-	"log"
+	"fmt"
 
 	libslack "github.com/nlopes/slack"
 )
 
-type Client struct {
-	client *libslack.Client
-	rtm    *libslack.RTM
+type Config struct {
+	Token   string
+	BotName string
 }
 
-func New(token string) *Client {
-	client := libslack.New(token)
+type Client struct {
+	BotName          string
+	client           *libslack.Client
+	rtm              *libslack.RTM
+	OnConnected      func()
+	OnReceiveMessage func(*Message)
+}
+
+type Message struct {
+	*libslack.MessageEvent
+}
+
+func New(cnf Config) *Client {
+	client := libslack.New(cnf.Token)
 	return &Client{
-		client: client,
-		rtm:    client.NewRTM(),
+		BotName:          cnf.BotName,
+		client:           client,
+		rtm:              client.NewRTM(),
+		OnConnected:      onConnectedDefault,
+		OnReceiveMessage: onReceiveMessageDefault,
 	}
 }
 
@@ -29,23 +44,23 @@ func (cli *Client) Run() {
 		case msg := <-cli.rtm.IncomingEvents:
 			switch ev := msg.Data.(type) {
 			case *libslack.ConnectedEvent:
-				log.Println("connected")
+				cli.OnConnected()
 
 			case *libslack.MessageEvent:
-				user := ev.User
-				text := ev.Text
-				channel := ev.Channel
-
-				if ev.Username == "testbot" {
+				if ev.Username == cli.BotName {
 					continue
 				}
 
-				cli.client.PostMessage(
-					channel,
-					libslack.MsgOptionText(text, false),
-					libslack.MsgOptionUsername("testbot"),
-				)
+				cli.OnReceiveMessage(&Message{ev})
 			}
 		}
 	}
+}
+
+func onConnectedDefault() {
+	fmt.Println("connected")
+}
+
+func onReceiveMessageDefault(msg *Message) {
+	fmt.Printf("received message:%s\n", msg.Text)
 }
