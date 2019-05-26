@@ -21,10 +21,6 @@ type Client struct {
 	OnReceiveMessage func(*Message)
 }
 
-type Message struct {
-	*libslack.MessageEvent
-}
-
 func New(cnf Config) *Client {
 	client := libslack.New(cnf.Token)
 	return &Client{
@@ -74,4 +70,8 @@ func onConnectedDefault() {
 
 func onReceiveMessageDefault(msg *Message) {
 	fmt.Printf("received message:%s\n", msg.Text)
+}
+
+type Message struct {
+	*libslack.MessageEvent
 }
