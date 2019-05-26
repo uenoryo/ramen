@@ -115,10 +115,10 @@ func (rmn Ramen) isDate(str string) bool {
 	if len(sps) != 2 {
 		return false
 	}
-	if len(sps[0]) != 1 || len(sps[0]) != 1 {
+	if len(sps[0]) != 1 && len(sps[0]) != 2 {
 		return false
 	}
-	if len(sps[1]) != 1 || len(sps[1]) != 1 {
+	if len(sps[1]) != 1 && len(sps[1]) != 2 {
 		return false
 	}
 	return true
@@ -129,10 +129,10 @@ func (rmn Ramen) isTime(str string) bool {
 	if len(sps) != 2 {
 		return false
 	}
-	if len(sps[0]) != 1 || len(sps[0]) != 1 {
+	if len(sps[0]) != 1 && len(sps[0]) != 2 {
 		return false
 	}
-	if len(sps[1]) != 1 || len(sps[1]) != 1 {
+	if len(sps[1]) != 1 && len(sps[1]) != 2 {
 		return false
 	}
 	return true
