@@ -2,7 +2,7 @@ package ramen
 
 import "testing"
 
-func Test_isDate(t *testing.T) {
+func Test_isTime(t *testing.T) {
 	t.Parallel()
 
 	type Test struct {
