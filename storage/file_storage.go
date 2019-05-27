@@ -64,7 +64,15 @@ func (fs *FileStorage) Data() []*Record {
 
 func (fs *FileStorage) Save(record *Record) error {
 	fs.dataCache[record.ID] = record
+	return fs.save()
+}
 
+func (fs *FileStorage) Delete(id string) error {
+	delete(fs.dataCache, id)
+	return fs.save()
+}
+
+func (fs *FileStorage) save() error {
 	rows := ""
 	for _, record := range fs.dataCache {
 		rows += record.String() + "\n"

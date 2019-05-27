@@ -15,6 +15,7 @@ type Storage interface {
 	Load() error
 	Data() []*Record
 	Save(record *Record) error
+	Delete(id string) error
 }
 
 type Record struct {

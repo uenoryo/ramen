@@ -17,6 +17,8 @@ var (
 	ErrMissingRemindTime = errors.New("error missing remind time")
 	ErrInvalidRemindTime = errors.New("error invalid remind date time")
 	ErrRemindTimeIsPast  = errors.New("error remind time is past")
+
+	ReminderCheckIntervalSec = 30 * time.Second
 )
 
 type Config struct {
@@ -55,10 +57,35 @@ func (rmn *Ramen) Run() error {
 		return errors.Wrap(err, "load storage failed.")
 	}
 
+	rmn.Watch()
 	rmn.client.FetchUsers()
 	rmn.client.Connect()
 	rmn.client.Run()
 
+	return nil
+}
+
+func (rmn *Ramen) Watch() {
+	ticker := time.NewTicker(ReminderCheckIntervalSec)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			if err := rmn.remindIfExists(); err != nil {
+				log.Println("[ERROR] remind failed, message:", err.Error())
+			}
+		}
+	}
+}
+
+func (rmn *Ramen) remindIfExists() error {
+	now := rmn.nowFunc()
+	for _, record := range rmn.storage.Data() {
+		if now.Equal(record.RemindAt) || now.Before(record.RemindAt) {
+			rmn.storage.Delete(record.ID)
+			time.Sleep(2 * time.Second)
+		}
+	}
 	return nil
 }
 
