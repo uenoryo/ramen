@@ -18,7 +18,7 @@ var (
 	ErrInvalidRemindTime = errors.New("error invalid remind date time")
 	ErrRemindTimeIsPast  = errors.New("error remind time is past")
 
-	ReminderCheckIntervalSec = 30 * time.Second
+	ReminderCheckIntervalSec = 10 * time.Second
 )
 
 type Config struct {
@@ -82,6 +82,7 @@ func (rmn *Ramen) remindIfExists() error {
 	now := rmn.nowFunc()
 	for _, record := range rmn.storage.Data() {
 		if now.Equal(record.RemindAt) || now.Before(record.RemindAt) {
+			rmn.client.Post(record.Channel, fmt.Sprintf("<@%s> そろそろ 「%s」 の時間ですよ！", record.UserID, record.Content))
 			rmn.storage.Delete(record.ID)
 			time.Sleep(2 * time.Second)
 		}

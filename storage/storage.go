@@ -28,7 +28,7 @@ type Record struct {
 }
 
 func NewFromCSVLine(rows []string) (*Record, error) {
-	if len(rows) != 5 {
+	if len(rows) != 6 {
 		return nil, errors.Errorf("invalid csv line %v", rows)
 	}
 
