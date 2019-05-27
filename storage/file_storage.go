@@ -26,6 +26,8 @@ func NewFileStorage() Storage {
 }
 
 func (fs *FileStorage) Load() error {
+	log.Println("[START] load data")
+
 	fs.dataCache = map[string]*Record{}
 	if fs.SavePath == "" {
 		fs.SavePath = defaultSavePath
@@ -49,8 +51,7 @@ func (fs *FileStorage) Load() error {
 		}
 		fs.dataCache[record.ID] = record
 	}
-
-	log.Println(fs.dataCache)
+	log.Println("[DONE] load data")
 	return nil
 }
 

@@ -57,7 +57,7 @@ func (rmn *Ramen) Run() error {
 		return errors.Wrap(err, "load storage failed.")
 	}
 
-	rmn.Watch()
+	go rmn.Watch()
 	rmn.client.FetchUsers()
 	rmn.client.Connect()
 	rmn.client.Run()
@@ -121,6 +121,7 @@ func (rmn *Ramen) receiveAndReply(msg *slack.Message) {
 	record := &storage.Record{
 		ID:        rmn.genID(remindAt.String() + msg.Text),
 		UserID:    msg.User,
+		Channel:   msg.Channel,
 		Content:   content,
 		CreatedAt: time.Now(),
 		RemindAt:  remindAt,
