@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/uenoryo/ramen/slack"
+	"github.com/uenoryo/ramen/storage"
 )
 
 var (
@@ -19,7 +21,8 @@ type Config struct {
 }
 
 type Ramen struct {
-	client *slack.Client
+	client  *slack.Client
+	storage storage.Storage
 }
 
 func New(cnf Config) *Ramen {
@@ -29,8 +32,11 @@ func New(cnf Config) *Ramen {
 		Token:          cnf.Token,
 	}
 	client := slack.New(slackCnf)
+
+	storage := storage.NewFileStorage()
 	ramen := &Ramen{
-		client: client,
+		client:  client,
+		storage: storage,
 	}
 	ramen.client.OnReceiveMessage = ramen.receiveAndReply
 	return ramen
@@ -46,7 +52,7 @@ func (rmn Ramen) Run() error {
 
 func (rmn Ramen) receiveAndReply(msg *slack.Message) {
 	log.Println(msg)
-	_, date, time, content, err := rmn.analysis(msg.Text)
+	_, date, remindAt, content, err := rmn.analysis(msg.Text)
 	switch err {
 	case nil:
 		break
@@ -61,7 +67,18 @@ func (rmn Ramen) receiveAndReply(msg *slack.Message) {
 		return
 	}
 
-	rmn.client.Post(msg.Channel, fmt.Sprintf("%s %s に「%s」をリマインドしますね！", date, time, content))
+	rmn.client.Post(msg.Channel, fmt.Sprintf("%s %s に「%s」をリマインドしますね！", date, remindAt, content))
+
+	record := &storage.Record{
+		ID:        "AAAAAA",
+		UserID:    "@Xvasada",
+		Content:   "おはようございますという",
+		CreatedAt: time.Now(),
+		RemindAt:  time.Now().Add(5 * time.Hour),
+	}
+	if err := rmn.storage.Save(record); err != nil {
+		log.Println("保存時にエラーが発生", err.Error())
+	}
 }
 
 func (rmn Ramen) analysis(text string) (to, date, time, content string, err error) {
