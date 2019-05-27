@@ -50,7 +50,7 @@ func New(cnf Config) *Ramen {
 }
 
 // Run (๑•̀ㅂ•́)و ｸﾞｯ
-func (rmn Ramen) Run() error {
+func (rmn *Ramen) Run() error {
 	if err := rmn.storage.Load(); err != nil {
 		return errors.Wrap(err, "load storage failed.")
 	}
@@ -62,8 +62,7 @@ func (rmn Ramen) Run() error {
 	return nil
 }
 
-func (rmn Ramen) receiveAndReply(msg *slack.Message) {
-	log.Println(msg)
+func (rmn *Ramen) receiveAndReply(msg *slack.Message) {
 	_, remindDate, remindTime, content, err := rmn.analysis(msg.Text)
 	switch err {
 	case nil:
@@ -79,21 +78,34 @@ func (rmn Ramen) receiveAndReply(msg *slack.Message) {
 		return
 	}
 
+	remindAt, err := rmn.strToTime(remindDate, remindTime)
+	switch {
+	case err == ErrInvalidRemindTime:
+		rmn.client.Post(msg.Channel, "時間がよくわかりません...")
+		return
+	case err == ErrRemindTimeIsPast:
+		rmn.client.Post(msg.Channel, "過ぎ去った時間には戻れません")
+		return
+	case err != nil:
+		rmn.client.Post(msg.Channel, "エラーが発生しました: "+err.Error())
+		return
+	}
+
 	record := &storage.Record{
 		ID:        rmn.genID(msg.Text),
 		UserID:    msg.User,
 		Content:   content,
 		CreatedAt: time.Now(),
-		RemindAt:  time.Now(),
+		RemindAt:  remindAt,
 	}
 	if err := rmn.storage.Save(record); err != nil {
 		log.Println("保存時にエラーが発生", err.Error())
 	}
 
-	rmn.client.Post(msg.Channel, fmt.Sprintf("<@%s> %s %s に「%s」をリマインドしますね！", record.UserID, remindDate, remindTime, content))
+	rmn.client.Post(msg.Channel, fmt.Sprintf("<@%s> りょーかいです！ %s にリマインドしますね！", record.UserID, remindAt.Format("2006/01/02 15:04")))
 }
 
-func (rmn Ramen) analysis(text string) (to, date, time, content string, err error) {
+func (rmn *Ramen) analysis(text string) (to, date, time, content string, err error) {
 	text = strings.TrimSpace(text)
 
 	// 1個目の要素がBotNameかどうか
@@ -153,11 +165,11 @@ func (rmn Ramen) analysis(text string) (to, date, time, content string, err erro
 	return
 }
 
-func (rmn Ramen) isBotName(str string) bool {
+func (rmn *Ramen) isBotName(str string) bool {
 	return str == fmt.Sprintf("@%s", rmn.client.BotName)
 }
 
-func (rmn Ramen) isDate(str string) bool {
+func (rmn *Ramen) isDate(str string) bool {
 	sps := strings.Split(str, "/")
 	if len(sps) != 2 {
 		return false
@@ -171,7 +183,7 @@ func (rmn Ramen) isDate(str string) bool {
 	return true
 }
 
-func (rmn Ramen) isTime(str string) bool {
+func (rmn *Ramen) isTime(str string) bool {
 	sps := strings.Split(str, ":")
 	if len(sps) != 2 {
 		return false
@@ -185,7 +197,7 @@ func (rmn Ramen) isTime(str string) bool {
 	return true
 }
 
-func (rmn Ramen) strToTime(remindDate, remindTime string) (time.Time, error) {
+func (rmn *Ramen) strToTime(remindDate, remindTime string) (time.Time, error) {
 	var (
 		now        = rmn.nowFunc()
 		remindYear = now.Format("2006")
@@ -213,7 +225,7 @@ func (rmn Ramen) strToTime(remindDate, remindTime string) (time.Time, error) {
 	return remindAt, nil
 }
 
-func (rmn Ramen) genID(str string) string {
+func (rmn *Ramen) genID(str string) string {
 	sha := sha256.Sum256([]byte(str))
 	return fmt.Sprintf("%x", sha[:15])
 }
