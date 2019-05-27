@@ -5,6 +5,7 @@ import (
 	"log"
 
 	libslack "github.com/nlopes/slack"
+	"github.com/pkg/errors"
 )
 
 type Config struct {
@@ -20,6 +21,7 @@ type Client struct {
 	rtm              *libslack.RTM
 	OnConnected      func()
 	OnReceiveMessage func(*Message)
+	memberIDMap      map[string]string
 }
 
 func New(cnf Config) *Client {
@@ -31,6 +33,7 @@ func New(cnf Config) *Client {
 		rtm:              client.NewRTM(),
 		OnConnected:      onConnectedDefault,
 		OnReceiveMessage: onReceiveMessageDefault,
+		memberIDMap:      make(map[string]string),
 	}
 }
 
@@ -66,6 +69,17 @@ func (cli *Client) Post(channel, text string) {
 		libslack.MsgOptionText(text, false),
 		libslack.MsgOptionUsername(cli.BotDisplayName),
 	)
+}
+
+func (cli *Client) FetchUsers() error {
+	users, err := cli.client.GetUsers()
+	if err != nil {
+		return errors.Wrap(err, "failed get users")
+	}
+	for _, u := range users {
+		cli.memberIDMap[u.Name] = u.ID
+	}
+	return nil
 }
 
 func onConnectedDefault() {

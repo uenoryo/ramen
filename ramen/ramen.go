@@ -49,6 +49,7 @@ func (rmn Ramen) Run() error {
 		return errors.Wrap(err, "load storage failed.")
 	}
 
+	rmn.client.FetchUsers()
 	rmn.client.Connect()
 	rmn.client.Run()
 
