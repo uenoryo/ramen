@@ -15,7 +15,7 @@ const (
 
 func main() {
 	if err := _main(); err != nil {
-		log.Fatal("Whoops!!", err.Error())
+		log.Fatal("Whoops!! ", err.Error())
 	}
 }
 
@@ -31,6 +31,9 @@ func _main() error {
 	}
 
 	ramen := ramen.New(cnf)
-	ramen.Run()
+
+	if err := ramen.Run(); err != nil {
+		return errors.Wrap(err, "ramen launch failed")
+	}
 	return nil
 }

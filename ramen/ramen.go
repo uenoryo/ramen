@@ -1,12 +1,12 @@
 package ramen
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/uenoryo/ramen/slack"
 	"github.com/uenoryo/ramen/storage"
 )
@@ -44,6 +44,10 @@ func New(cnf Config) *Ramen {
 
 // Run (๑•̀ㅂ•́)و ｸﾞｯ
 func (rmn Ramen) Run() error {
+	if err := rmn.storage.Load(); err != nil {
+		return errors.Wrap(err, "load storage failed.")
+	}
+
 	rmn.client.Connect()
 	rmn.client.Run()
 
