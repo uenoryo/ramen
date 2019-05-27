@@ -92,7 +92,7 @@ func (rmn *Ramen) receiveAndReply(msg *slack.Message) {
 	}
 
 	record := &storage.Record{
-		ID:        rmn.genID(msg.Text),
+		ID:        rmn.genID(remindAt.String() + msg.Text),
 		UserID:    msg.User,
 		Content:   content,
 		CreatedAt: time.Now(),

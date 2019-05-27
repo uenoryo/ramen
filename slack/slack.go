@@ -2,7 +2,6 @@ package slack
 
 import (
 	"fmt"
-	"log"
 
 	libslack "github.com/nlopes/slack"
 	"github.com/pkg/errors"
@@ -50,9 +49,6 @@ func (cli *Client) Run() {
 				cli.OnConnected()
 
 			case *libslack.MessageEvent:
-				log.Println(ev.Username)
-				log.Println(ev.Username)
-				log.Println(cli.BotDisplayName)
 				if ev.Username == cli.BotDisplayName {
 					continue
 				}
