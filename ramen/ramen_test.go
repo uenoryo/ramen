@@ -1,7 +1,9 @@
 package ramen
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/uenoryo/ramen/slack"
 )
@@ -240,5 +242,128 @@ func Test_analysis(t *testing.T) {
 		if content != test.Expect.Content {
 			t.Errorf("error result content. got %s, want %s", content, test.Expect.Content)
 		}
+	}
+}
+
+func Test_strToTime(t *testing.T) {
+	t.Parallel()
+
+	type Input struct {
+		Date string
+		Time string
+	}
+
+	type Test struct {
+		Input  Input
+		Expect time.Time
+		Error  error
+	}
+
+	strToTime := func(str string) time.Time {
+		dt, err := time.Parse("2006-01-02 15:04:05 MST", str)
+		if err != nil {
+			t.Fatal("error parse time", err.Error())
+		}
+		return dt
+	}
+
+	testNowFunc := func() time.Time {
+		return strToTime("2019-11-10 12:00:00 JST")
+	}
+
+	cases := []Test{
+		{
+			Input: Input{
+				Date: "12/15",
+				Time: "10:15",
+			},
+			Expect: strToTime("2019-12-15 10:15:00 JST"),
+		},
+		{
+			Input: Input{
+				Date: "11/12",
+				Time: "10:40",
+			},
+			Expect: strToTime("2019-11-12 10:40:00 JST"),
+		},
+		{
+			Input: Input{
+				Date: "2/5", // 年跨ぎ
+				Time: "3:4",
+			},
+			Expect: strToTime("2020-02-05 03:04:00 JST"),
+		},
+		{
+			Input: Input{
+				Date: "10/10", // 過去
+				Time: "11:59",
+			},
+			Error: ErrRemindTimeIsPast,
+		},
+		{
+			Input: Input{
+				Date: "1/1", // 省略形
+				Time: "2:3",
+			},
+			Expect: strToTime("2020-01-01 02:03:00 JST"),
+		},
+		{
+			Input: Input{
+				Date: "", // 省略
+				Time: "12:01",
+			},
+			Expect: strToTime("2019-11-10 12:01:00 JST"),
+		},
+		{
+			Input: Input{
+				Date: "", // 省略
+				Time: "12:00",
+			},
+			Error: ErrRemindTimeIsPast,
+		},
+		{
+			Input: Input{
+				Date: "",
+				Time: "",
+			},
+			Error: ErrInvalidRemindTime,
+		},
+		{
+			Input: Input{
+				Date: "12/32", // 存在しない日
+				Time: "10:00",
+			},
+			Error: ErrInvalidRemindTime,
+		},
+		{
+			Input: Input{
+				Date: "12/1",
+				Time: "24:00", // 存在しない時間
+			},
+			Error: ErrInvalidRemindTime,
+		},
+	}
+
+	for _, test := range cases {
+		t.Run(fmt.Sprintf("input %s %s", test.Input.Date, test.Input.Time), func(t *testing.T) {
+			ramen := &Ramen{
+				client: &slack.Client{
+					BotName: "testbot",
+				},
+				nowFunc: testNowFunc,
+			}
+
+			res, err := ramen.strToTime(test.Input.Date, test.Input.Time)
+			if err != test.Error {
+				t.Fatalf("error is not match. got %v, want %v", err, test.Error)
+			}
+			if test.Error != nil {
+				return
+			}
+
+			if res.Unix() != test.Expect.Unix() {
+				t.Errorf("error strToTime, got %s, want %s", res.String(), test.Expect.String())
+			}
+		})
 	}
 }

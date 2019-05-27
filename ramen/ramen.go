@@ -26,6 +26,7 @@ type Config struct {
 type Ramen struct {
 	client  *slack.Client
 	storage storage.Storage
+	nowFunc func() time.Time
 }
 
 func New(cnf Config) *Ramen {
@@ -42,6 +43,9 @@ func New(cnf Config) *Ramen {
 		storage: storage,
 	}
 	ramen.client.OnReceiveMessage = ramen.receiveAndReply
+	ramen.nowFunc = func() time.Time {
+		return time.Now()
+	}
 	return ramen
 }
 
@@ -183,7 +187,7 @@ func (rmn Ramen) isTime(str string) bool {
 
 func (rmn Ramen) strToTime(remindDate, remindTime string) (time.Time, error) {
 	var (
-		now        = time.Now()
+		now        = rmn.nowFunc()
 		remindYear = now.Format("2006")
 	)
 	if remindDate == "" {
@@ -191,17 +195,20 @@ func (rmn Ramen) strToTime(remindDate, remindTime string) (time.Time, error) {
 	}
 
 	dtStr := fmt.Sprintf("%s %s %s JST", remindYear, remindDate, remindTime)
-	remindAt, err := time.Parse("1/2 15:4 MST", dtStr)
+	remindAt, err := time.Parse("2006 1/2 15:4 MST", dtStr)
 	if err != nil {
 		return time.Time{}, ErrInvalidRemindTime
 	}
+	remindMonth := remindAt.Format("1")
 
 	if remindAt.Equal(now) || remindAt.Before(now) {
-		// NOTE: 10ヶ月以上過去を指定していた場合は来年を指していると判定する仕様
-		if !now.AddDate(0, -10, 0).Before(remindAt) {
+		// NOTE: 「年が替わる2ヶ月前」 且つ 「1月, 2月」を指定していた場合は来年を指していると判定する仕様
+		isNearNextYaer := now.AddDate(0, 2, 0).Format("2006") != now.Format("2006")
+		if isNearNextYaer && (remindMonth == "1" || remindMonth == "2") {
+			remindAt = remindAt.AddDate(1, 0, 0)
+		} else {
 			return time.Time{}, ErrRemindTimeIsPast
 		}
-		remindAt = remindAt.AddDate(1, 0, 0)
 	}
 	return remindAt, nil
 }
