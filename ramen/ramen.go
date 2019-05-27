@@ -81,7 +81,7 @@ func (rmn *Ramen) Watch() {
 func (rmn *Ramen) remindIfExists() error {
 	now := rmn.nowFunc()
 	for _, record := range rmn.storage.Data() {
-		if now.Equal(record.RemindAt) || now.Before(record.RemindAt) {
+		if now.Equal(record.RemindAt) || now.After(record.RemindAt) {
 			rmn.client.Post(record.Channel, fmt.Sprintf("<@%s> そろそろ 「%s」 の時間ですよ！", record.UserID, record.Content))
 			rmn.storage.Delete(record.ID)
 			time.Sleep(2 * time.Second)
