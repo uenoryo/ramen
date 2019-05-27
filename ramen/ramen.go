@@ -15,6 +15,8 @@ import (
 var (
 	ErrMissingBotBame    = errors.New("error missing bot name")
 	ErrMissingRemindTime = errors.New("error missing remind time")
+	ErrInvalidRemindTime = errors.New("error invalid remind date time")
+	ErrRemindTimeIsPast  = errors.New("error remind time is past")
 )
 
 type Config struct {
@@ -177,6 +179,31 @@ func (rmn Ramen) isTime(str string) bool {
 		return false
 	}
 	return true
+}
+
+func (rmn Ramen) strToTime(remindDate, remindTime string) (time.Time, error) {
+	var (
+		now        = time.Now()
+		remindYear = now.Format("2006")
+	)
+	if remindDate == "" {
+		remindDate = now.Format("01/02")
+	}
+
+	dtStr := fmt.Sprintf("%s %s %s JST", remindYear, remindDate, remindTime)
+	remindAt, err := time.Parse("1/2 15:4 MST", dtStr)
+	if err != nil {
+		return time.Time{}, ErrInvalidRemindTime
+	}
+
+	if remindAt.Equal(now) || remindAt.Before(now) {
+		// NOTE: 10ヶ月以上過去を指定していた場合は来年を指していると判定する仕様
+		if !now.AddDate(0, -10, 0).Before(remindAt) {
+			return time.Time{}, ErrRemindTimeIsPast
+		}
+		remindAt = remindAt.AddDate(1, 0, 0)
+	}
+	return remindAt, nil
 }
 
 func (rmn Ramen) genID(str string) string {
