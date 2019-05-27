@@ -1,6 +1,7 @@
 package ramen
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"strings"
@@ -56,7 +57,7 @@ func (rmn Ramen) Run() error {
 
 func (rmn Ramen) receiveAndReply(msg *slack.Message) {
 	log.Println(msg)
-	_, date, remindAt, content, err := rmn.analysis(msg.Text)
+	_, remindDate, remindTime, content, err := rmn.analysis(msg.Text)
 	switch err {
 	case nil:
 		break
@@ -71,14 +72,14 @@ func (rmn Ramen) receiveAndReply(msg *slack.Message) {
 		return
 	}
 
-	rmn.client.Post(msg.Channel, fmt.Sprintf("%s %s に「%s」をリマインドしますね！", date, remindAt, content))
+	rmn.client.Post(msg.Channel, fmt.Sprintf("%s %s に「%s」をリマインドしますね！", remindDate, remindTime, content))
 
 	record := &storage.Record{
-		ID:        "AAAAAA",
-		UserID:    "@Xvasada",
-		Content:   "おはようございますという",
+		ID:        rmn.genID(msg.Text),
+		UserID:    "TODO",
+		Content:   content,
 		CreatedAt: time.Now(),
-		RemindAt:  time.Now().Add(5 * time.Hour),
+		RemindAt:  time.Now(),
 	}
 	if err := rmn.storage.Save(record); err != nil {
 		log.Println("保存時にエラーが発生", err.Error())
@@ -175,4 +176,9 @@ func (rmn Ramen) isTime(str string) bool {
 		return false
 	}
 	return true
+}
+
+func (rmn Ramen) genID(str string) string {
+	sha := sha256.Sum256([]byte(str))
+	return fmt.Sprintf("%x", sha[:15])
 }
