@@ -73,11 +73,9 @@ func (rmn Ramen) receiveAndReply(msg *slack.Message) {
 		return
 	}
 
-	rmn.client.Post(msg.Channel, fmt.Sprintf("%s %s に「%s」をリマインドしますね！", remindDate, remindTime, content))
-
 	record := &storage.Record{
 		ID:        rmn.genID(msg.Text),
-		UserID:    "TODO",
+		UserID:    msg.User,
 		Content:   content,
 		CreatedAt: time.Now(),
 		RemindAt:  time.Now(),
@@ -85,6 +83,8 @@ func (rmn Ramen) receiveAndReply(msg *slack.Message) {
 	if err := rmn.storage.Save(record); err != nil {
 		log.Println("保存時にエラーが発生", err.Error())
 	}
+
+	rmn.client.Post(msg.Channel, fmt.Sprintf("<@%s> %s %s に「%s」をリマインドしますね！", record.UserID, remindDate, remindTime, content))
 }
 
 func (rmn Ramen) analysis(text string) (to, date, time, content string, err error) {
