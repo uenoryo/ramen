@@ -82,7 +82,7 @@ func (rmn *Ramen) remindIfExists() error {
 	now := rmn.nowFunc()
 	for _, record := range rmn.storage.Data() {
 		if now.Equal(record.RemindAt) || now.After(record.RemindAt) {
-			rmn.client.Post(record.Channel, fmt.Sprintf("<@%s> そろそろ 「%s」 の時間ですよ！", record.UserID, record.Content))
+			rmn.client.Post(record.Channel, fmt.Sprintf("<@%s> そろそろ %s の時間ですよ！", record.UserID, rmn.afterFilter(record.Content)))
 			rmn.storage.Delete(record.ID)
 			time.Sleep(2 * time.Second)
 		}
@@ -91,7 +91,9 @@ func (rmn *Ramen) remindIfExists() error {
 }
 
 func (rmn *Ramen) receiveAndReply(msg *slack.Message) {
-	_, remindDate, remindTime, content, err := rmn.analysis(msg.Text)
+	text := rmn.beforeFilter(msg.Text)
+
+	_, remindDate, remindTime, content, err := rmn.analysis(text)
 	switch err {
 	case nil:
 		break
@@ -120,7 +122,7 @@ func (rmn *Ramen) receiveAndReply(msg *slack.Message) {
 	}
 
 	record := &storage.Record{
-		ID:        rmn.genID(remindAt.String() + msg.Text),
+		ID:        rmn.genID(remindAt.String() + text),
 		UserID:    msg.User,
 		Channel:   msg.Channel,
 		Content:   content,
@@ -192,6 +194,14 @@ func (rmn *Ramen) analysis(text string) (to, date, time, content string, err err
 	// 残りは文章
 	content = text
 	return
+}
+
+func (rmn *Ramen) beforeFilter(str string) string {
+	return strings.Replace(str, "\n", " U+000A", -1)
+}
+
+func (rmn *Ramen) afterFilter(str string) string {
+	return strings.Replace(str, "U+000A", "\n", -1)
 }
 
 func (rmn *Ramen) isBotName(str string) bool {
