@@ -78,6 +78,10 @@ func (cli *Client) FetchUsers() error {
 	return nil
 }
 
+func (cli *Client) MemberIDMap() map[string]string {
+	return cli.memberIDMap
+}
+
 func onConnectedDefault() {
 	fmt.Println("connected")
 }
