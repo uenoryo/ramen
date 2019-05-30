@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/csv"
-	"fmt"
 	"log"
 	"os"
 
@@ -74,11 +73,6 @@ func (fs *FileStorage) Delete(id string) error {
 }
 
 func (fs *FileStorage) save() error {
-	rows := ""
-	for _, record := range fs.dataCache {
-		rows += record.String() + "\n"
-	}
-
 	if fs.SavePath == "" {
 		fs.SavePath = defaultSavePath
 	}
@@ -89,7 +83,11 @@ func (fs *FileStorage) save() error {
 	}
 	defer file.Close()
 
-	fmt.Fprintln(file, rows)
+	writer := csv.NewWriter(file)
+	for _, record := range fs.dataCache {
+		writer.Write(record.Strings())
+	}
+	writer.Flush()
 
 	return nil
 }

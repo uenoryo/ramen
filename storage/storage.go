@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -45,6 +44,6 @@ func NewFromCSVLine(rows []string) (*Record, error) {
 	return &Record{rows[0], rows[1], rows[2], rows[3], createdAt, remindAt}, nil
 }
 
-func (r *Record) String() string {
-	return fmt.Sprintf("%s,%s,%s,%s,%s,%s", r.ID, r.UserID, r.Channel, r.Content, r.CreatedAt.Format(timeFormat), r.RemindAt.Format(timeFormat))
+func (r *Record) Strings() []string {
+	return []string{r.ID, r.UserID, r.Channel, r.Content, r.CreatedAt.Format(timeFormat), r.RemindAt.Format(timeFormat)}
 }
