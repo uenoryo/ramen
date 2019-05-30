@@ -197,7 +197,9 @@ func (rmn *Ramen) analysis(text string) (to, date, time, content string, err err
 }
 
 func (rmn *Ramen) beforeFilter(str string) string {
-	return strings.Replace(str, "\n", " U+000A", -1)
+	str = strings.Replace(str, "\n", " U+000A", -1)
+	str = strings.Replace(str, "@_", "@", -1)
+	return str
 }
 
 func (rmn *Ramen) afterFilter(str string) string {
