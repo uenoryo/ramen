@@ -133,7 +133,7 @@ func (rmn *Ramen) receiveAndReply(msg *slack.Message) {
 		log.Println("保存時にエラーが発生", err.Error())
 	}
 
-	rmn.client.Post(msg.Channel, fmt.Sprintf("<@%s> りょーかいです！ %s にリマインドしますね！", record.UserID, remindAt.Format("2006/01/02 15:04")))
+	rmn.client.Post(msg.Channel, fmt.Sprintf("<@%s> 了解しました！ %s にリマインドしますね！", record.UserID, remindAt.Format("2006/01/02 15:04")))
 }
 
 func (rmn *Ramen) analysis(text string) (to, date, time, content string, err error) {
