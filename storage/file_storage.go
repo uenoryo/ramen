@@ -83,7 +83,7 @@ func (fs *FileStorage) save() error {
 		fs.SavePath = defaultSavePath
 	}
 
-	file, err := os.OpenFile(fs.SavePath, os.O_WRONLY|os.O_CREATE, 0666)
+	file, err := os.OpenFile(fs.SavePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return errors.Wrapf(err, "open file %s faild", fs.SavePath)
 	}
