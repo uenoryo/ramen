@@ -4,17 +4,19 @@
 [[projects]]
   name = "github.com/gorilla/websocket"
   packages = ["."]
-  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
-  version = "v1.4.0"
+  revision = "c3e18be99d19e6b3e8f1559eea2c161a665c4b6b"
+  version = "v1.4.1"
 
 [[projects]]
   name = "github.com/nlopes/slack"
   packages = [
     ".",
+    "internal/errorsx",
+    "internal/timex",
     "slackutilsx"
   ]
-  revision = "a7deeca7935c178aa865249bab511daf816288ba"
-  version = "v0.5.0"
+  revision = "1af34b6bda3d43878255fff7bd2884ea0c23295e"
+  version = "v0.6.0"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -25,12 +27,12 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
-  version = "v2.2.2"
+  revision = "1f64d6156d11335c3f22d9330b0ad14fc1e789ce"
+  version = "v2.2.7"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "80020003e3d6f019b93651d03434ce5ac0f2e60e30656817d6d7d7a8e79a8be4"
+  inputs-digest = "70e4a71c78c70f6e72f8591dd7bc1ae5383ede70f34a129c07491d34d511ed59"
   solver-name = "gps-cdcl"
   solver-version = 1
